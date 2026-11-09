@@ -2,30 +2,48 @@
 import pandas as pd
 import chardet
 
+
 def detect_encoding(file):
     rawdata = file.read(10000)
     result = chardet.detect(rawdata)
     file.seek(0)
 
-    encoding = result.get('encoding')
+    encoding = result.get("encoding")
 
-    # Avoid incorrect ASCII detection
-    if not encoding or encoding.lower() == 'ascii':
-        return 'utf-8'
+    if not encoding or encoding.lower() == "ascii":
+        return "utf-8"
 
     return encoding
 
 
 def read_large_csv(file):
-    encoding = detect_encoding(file)
+    encodings = ["utf-8", "utf-8-sig", "latin1", "cp1252"]
 
-    encodings = [encoding, 'utf-8-sig', 'utf-8', 'cp1252', 'latin1']
+    last_error = None
 
-    for enc in dict.fromkeys(encodings):
+    for enc in encodings:
         try:
             file.seek(0)
-            return pd.read_csv(file, encoding=enc)
-        except UnicodeDecodeError:
-            continue
 
-    raise ValueError("Unable to read CSV. Please check its file encoding.")
+            df = pd.read_csv(
+                file,
+                encoding=enc,
+                engine="python",
+                on_bad_lines="warn",
+                sep=None,
+                dtype=str,
+                keep_default_na=False
+            )
+
+            return df
+
+        except (
+            UnicodeDecodeError,
+            pd.errors.ParserError,
+            ValueError
+        ) as e:
+            last_error = e
+
+    raise ValueError(
+        f"Unable to read CSV file. Error: {last_error}"
+    )
