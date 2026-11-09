@@ -7,7 +7,7 @@ from utils import session_log
 from gpt import suggest
 import json
 import os
-
+session_log.initialize_log()
 st.set_page_config(layout="wide")
 st.title("🧹 D- Cleanse")
 
