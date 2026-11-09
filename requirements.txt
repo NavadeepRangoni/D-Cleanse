@@ -6,3 +6,4 @@ chardet
 scikit-learn
 ydata-profiling
 setuptools<81
+streamlit-pandas-profiling
